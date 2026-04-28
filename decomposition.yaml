@@ -1,0 +1,67 @@
+coordination_pattern: map-reduce
+
+rationale: >
+  The input consists of four structurally identical regional CSV files.
+  Each can be processed independently and in parallel. A single agent
+  reading all four files in one context window frequently hallucinates
+  cross-region duplicate invoice IDs and produces incorrect totals due
+  to context pressure. Parallel map agents — one per region — each
+  focus on a single file with full attention. The reduce agent then
+  merges all outputs to detect cross-file duplicates and rank reps globally.
+
+sub_tasks:
+  - id: map-north
+    description: >
+      Read input_artifacts/north.csv only. Extract: (1) net sales total
+      for the north region, (2) all invoice_ids with their amounts,
+      (3) any refunds where abs(amount) > 5000, (4) per-rep net sales.
+      Return structured JSON.
+    parallel_group: map
+    input_files:
+      - input_artifacts/north.csv
+
+  - id: map-south
+    description: >
+      Read input_artifacts/south.csv only. Extract: (1) net sales total
+      for the south region, (2) all invoice_ids with their amounts,
+      (3) any refunds where abs(amount) > 5000, (4) per-rep net sales.
+      Return structured JSON.
+    parallel_group: map
+    input_files:
+      - input_artifacts/south.csv
+
+  - id: map-east
+    description: >
+      Read input_artifacts/east.csv only. Extract: (1) net sales total
+      for the east region, (2) all invoice_ids with their amounts,
+      (3) any refunds where abs(amount) > 5000, (4) per-rep net sales.
+      Return structured JSON.
+    parallel_group: map
+    input_files:
+      - input_artifacts/east.csv
+
+  - id: map-west
+    description: >
+      Read input_artifacts/west.csv only. Extract: (1) net sales total
+      for the west region, (2) all invoice_ids with their amounts,
+      (3) any refunds where abs(amount) > 5000, (4) per-rep net sales.
+      Return structured JSON.
+    parallel_group: map
+    input_files:
+      - input_artifacts/west.csv
+
+  - id: reduce-aggregate
+    description: >
+      Receive the structured JSON outputs from all four map agents.
+      Perform the following aggregation:
+      (1) Report net sales per region.
+      (2) Detect invoice_ids that appear in more than one region — these are duplicates.
+      (3) Collect all suspicious refunds flagged by map agents.
+      (4) Merge per-rep totals across all regions and identify the top 3 reps by net sales.
+      Output the final JSON in the exact format specified in instruction.md.
+    parallel_group: reduce
+    depends_on:
+      - map-north
+      - map-south
+      - map-east
+      - map-west

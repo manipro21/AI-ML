@@ -1,0 +1,23 @@
+[task]
+name = "swarmbench/bce3b02476f74d8fb1bd44022dc284f1-SWARMBENCH-MAPREDUCE-DATAANALYSIS-SALESAUDIT"
+description = "Audit four regional sales CSV files: compute net sales, detect cross-region duplicate invoices, flag suspicious refunds, and rank top sales reps."
+
+[metadata]
+domain = "data-analysis"
+coordination_pattern = "map-reduce"
+verifier_type = "llm-judge"
+human_solving_hours_estimate = 1
+estimated_sub_agents = 5
+input_token_estimate = 8000
+why_multi_agent = "Four independent regional files are processed in parallel by separate agents. A single agent reading all files sequentially loses precision on cross-file duplicate detection and miscalculates totals as context grows. Parallel map agents each handle one region; the reducer aggregates with full accuracy."
+
+[agent]
+timeout_sec = 1800
+
+[verifier]
+timeout_sec = 600
+
+[environment]
+cpus = 2
+memory_mb = 4096
+build_timeout_sec = 600
