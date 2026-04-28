@@ -1,0 +1,36 @@
+sub_tasks:
+  - id: investigate-and-fix-import-machinery
+    description: >
+      Investigate the file-discovery module that handles importing Python
+      files as provider modules. Read the relevant source file under
+      src/fastmcp/server/providers/ and identify the three import-related
+      bugs described in the instruction (sys.path pollution, stdlib module
+      shadowing, and unbounded directory-tree walking). Implement fixes
+      for all three so that: the module path list is unchanged after every
+      import call, provider files never replace already-registered modules,
+      and the package-root search respects a caller-supplied boundary.
+      Update all call sites to pass the boundary through.
+    depends_on: []
+    parallel_group: fan-out
+
+  - id: investigate-and-fix-reload-logic
+    description: >
+      Investigate the provider class that manages reload-on-request
+      behaviour. Read the relevant source file under
+      src/fastmcp/server/providers/ and identify the three reload-related
+      bugs described in the instruction (race condition returning empty
+      results, redundant reloads under concurrency, and silent failure
+      when the root path does not exist). Implement fixes for all three
+      so that: concurrent readers never observe an empty component set,
+      only one actual reload runs per wave of concurrent requests, and a
+      warning is logged when the configured root directory is missing.
+    depends_on: []
+    parallel_group: fan-out
+
+  - id: verify-all-fixes
+    description: >
+      After both sets of fixes are applied, run the verification script
+      from the repository root to confirm all checks pass. If any check
+      fails, report which check failed and why.
+    depends_on: [investigate-and-fix-import-machinery, investigate-and-fix-reload-logic]
+    parallel_group: synthesize
