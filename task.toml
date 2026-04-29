@@ -1,0 +1,25 @@
+[task]
+name = "swarmbench/1560dd4f75fa49f88574f5c47ce06aac-SWARMBENCH-FANOUT-CODESWE-FASTMCP-FILESYSTEM-PROVIDER-IMPORT-BUGFIX"
+description = "Fix FileSystemProvider import machinery and reload concurrency bugs in FastMCP"
+
+[metadata]
+verifier_type = "executable"
+domain = "code-swe"
+coordination_pattern = "fan-out-synthesize"
+human_solving_hours_estimate = 12
+human_solving_hours_justification = "A developer must understand Python's import internals (sys.path, sys.modules, importlib) to diagnose and fix three interrelated import machinery bugs (~4h), then separately understand asyncio locking and race condition patterns to fix two reload concurrency bugs (~3h). Implementing collision-safe sys.modules keys, try/finally sys.path cleanup in two code paths, threading a stop_at parameter through the call chain, widening lock scope, and adding deduplication (~3h). Verifying no regressions across package and non-package imports, reload and non-reload modes (~2h)."
+estimated_sub_agents = 3
+input_token_estimate = 12000
+why_multi_agent = "The fix spans two distinct domains in separate files: import machinery (sys.path, sys.modules, importlib) in filesystem_discovery.py and async concurrency (asyncio.Lock, race conditions, generation counters) in filesystem.py. Each domain requires specialized knowledge. A single agent context-switching between Python import system internals and async locking patterns faces attention degradation. Parallel agents can independently investigate and fix the import bugs and the reload bugs, then verify the combined result."
+reference_link = "https://github.com/PrefectHQ/fastmcp/issues/3625"
+
+[agent]
+timeout_sec = 3600
+
+[verifier]
+timeout_sec = 600
+
+[environment]
+cpus = 2
+memory_mb = 4096
+build_timeout_sec = 600
